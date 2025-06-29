@@ -60,7 +60,7 @@ Netlify
 ![image](https://github.com/user-attachments/assets/3f5c094f-9996-4913-a8cc-a04bc6c8cd02)
 
 
-Link demo [(kalau sudah dideploy).](https://preeminent-donut-330bb3.netlify.app/)
+Link demo [(Dideploy dengan netlify).](https://preeminent-donut-330bb3.netlify.app/)
 
 
 ## Masalah
