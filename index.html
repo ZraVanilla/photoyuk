@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Yuk</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="navbar-left">
+                <span class="navbar-logo">📸</span>
+            </div>
+            <div class="navbar-center">
+                <h1 class="navbar-title">Photo Yuk</h1>
+            </div>
+            <div class="navbar-right">
+                <!-- Bisa tambahkan menu/ikon lain di sini -->
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="photobooth-container">
+            <canvas id="fxCanvas"></canvas>
+            <img src="assets/frame1.png" alt="Frame" class="photo-frame" id="photoFrame">
+            
+            <div id="cameraStatus" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 20;">
+                🔄 Inisialisasi Kamera...
+            </div>
+            
+            <!-- Camera Countdown Timer -->
+            <div id="cameraCountdown" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 20px; font-size: 48px; font-weight: bold; z-index: 25; display: none; text-align: center; box-shadow: 0 0 30px rgba(255,255,255,0.3);">
+                <div id="cameraCountdownNumber">5</div>
+                <div id="cameraElapsedTime" style="font-size: 16px; margin-top: 8px; opacity: 0.8;">0 detik</div>
+            </div>
+            
+            <div id="controlsHint" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; z-index: 20; opacity: 0.8;">
+                💡 H: Sembunyikan kontrol | C: Countdown | Space: Foto | Esc: Stop/Reset
+            </div>
+            
+            <div class="camera-controls">
+                <!-- Main capture buttons -->
+                <div class="button-group">
+                    <button id="captureBtn" onclick="captureWithCountdown()">📸 Foto</button>
+                    <button id="captureNoFrameBtn" onclick="takePhotoWithoutFrame()">📸 Tanpa Frame</button>
+            </div>
+                
+                <!-- Camera control buttons -->
+                <div class="button-group camera-controls-advanced" style="display: none;">
+                    <button id="restartCameraBtn" onclick="restartCamera()">🔄 Restart</button>
+                    <button id="forceRestartBtn" onclick="forceRestartCamera()">🚨 Force</button>
+                    <button id="debugBtn" onclick="debugCameraState()">🐛 Debug</button>
+        </div>
+                
+                <!-- Toggle button for advanced controls -->
+                <div class="button-group">
+                    <button id="toggleControlsBtn" onclick="toggleAdvancedControls()" style="background-color: #666; font-size: 10px; padding: 6px 8px;">⚙️</button>
+                    <button id="cleanModeBtn" onclick="toggleCleanMode()" style="background-color: #666; font-size: 10px; padding: 6px 8px;">🎯</button>
+                </div>
+                
+                <!-- Action buttons (hidden by default) -->
+                <div class="button-group action-buttons" style="display: none; gap: 12px; flex-wrap: wrap;">
+                    <button id="downloadBtn" onclick="downloadPhoto()">💾 Download</button>
+                    <button id="retakeBtn" onclick="retakePhoto()">🔄 Ulang</button>
+                    <!-- Share menu -->
+                    <div id="shareMenu" style="display: flex; gap: 8px; align-items: center;">
+                        <button onclick="sharePhoto('instagram')" title="Bagikan ke Instagram" class="share-btn">📸 Instagram</button>
+                        <button onclick="sharePhoto('facebook')" title="Bagikan ke Facebook" class="share-btn">📘 Facebook</button>
+                        <button onclick="sharePhoto('whatsapp')" title="Bagikan ke WhatsApp" class="share-btn">🟢 WhatsApp</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdownOverlay" class="countdown-overlay"></div>
+
+        <div class="photo-preview" id="photoPreview" style="display: none;">
+            <h3>Hasil Foto</h3>
+            <canvas id="previewCanvas"></canvas>
+        </div>
+
+        <!-- Compact Controls Layout -->
+        <div class="controls-container" style="margin-top: 120px; max-width: 700px; margin-left: auto; margin-right: auto; background: rgba(255,255,255,0.95); border-radius: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 32px 24px 24px 24px;">
+            <!-- Row 1: Frame Selection -->
+            <div class="control-row">
+                <div class="frame-selector compact" style="margin-bottom: 24px; padding: 16px 0 0 0; border-bottom: 2px dashed #e0e0e0; border-radius: 16px 16px 0 0; background: linear-gradient(90deg, #f8fafc 60%, #e3f0ff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <h3>📷 Frame</h3>
+                    <div class="frames compact-frames">
+                <img src="assets/frame1.png" class="frame-option" onclick="changeFrame('assets/frame1.png')">
+                        <img src="assets/frame2.png" class="frame-option" onclick="changeFrame('assets/frame2.png')">
+                        <img src="assets/frame3.png" class="frame-option" onclick="changeFrame('assets/frame3.png')">
+                        <img src="assets/frame4.png" class="frame-option" onclick="changeFrame('assets/frame4.png')">
+                        <img src="assets/frame5.png" class="frame-option" onclick="changeFrame('assets/frame5.png')">
+                        <img src="assets/frame6.png" class="frame-option" onclick="changeFrame('assets/frame6.png')">
+                        <div class="frame-option no-frame" onclick="disableFrame()">
+                            <span>❌</span>
+                </div>
+            </div>
+                </div>
+        </div>
+
+            <!-- Row 2: Effects and Filters -->
+            <div class="control-row">
+                <div class="filter-selector compact">
+                    <h3>🎨 Filter & Efek</h3>
+                    <div class="effects-grid">
+                        <div class="effect-group">
+                            <label>Lensa:</label>
+                            <select id="effectSelect" onchange="applyLensEffect()">
+                                <option value="mirror">🪞 Mirror</option>
+                                <option value="none">⚪ Normal</option>
+                                <option value="fisheye">🐟 Fisheye</option>
+                                <option value="bulge">🔍 Bulge</option>
+                                <option value="pinch">📌 Pinch</option>
+                                <option value="vintage">📷 Vintage</option>
+                                <option value="zoom">🔍 Zoom</option>
+                                <option value="tilt">↔️ Tilt</option>
+                                <option value="dramatic">🎭 Dramatic</option>
+                                <option value="dreamy">💭 Dreamy</option>
+                                <option value="neon">💡 Neon</option>
+            </select>
+        </div>
+
+                        <div class="effect-group">
+                            <label>Warna:</label>
+                            <select id="colorFilterSelect" onchange="applyColorFilter()">
+                                <option value="none">⚪ Normal</option>
+                                <option value="grayscale(100%)">⚫ Grayscale</option>
+                                <option value="sepia(100%)">🟤 Sepia</option>
+                                <option value="brightness(150%)">☀️ Bright</option>
+                                <option value="contrast(200%)">⚡ High Contrast</option>
+                                <option value="blur(3px)">🌫️ Blur</option>
+                                <option value="invert(100%)">🔄 Invert</option>
+                                <option value="saturate(200%)">🌈 Saturated</option>
+                                <option value="hue-rotate(90deg)">🎨 Hue 90°</option>
+                                <option value="hue-rotate(180deg)">🎨 Hue 180°</option>
+                                <option value="opacity(50%)">👻 Low Opacity</option>
+                                <option value="grayscale(50%) sepia(50%)">📸 Vintage</option>
+                                <option value="contrast(150%) brightness(120%)">✨ Vivid</option>
+                                <option value="blur(1px) brightness(120%)">🌅 Soft Blur</option>
+                                <option value="saturate(300%) contrast(80%)">🎪 Pop Color</option>
+                                <option value="hue-rotate(270deg) saturate(150%)">❄️ Cool Tone</option>
+                                <option value="hue-rotate(45deg) brightness(110%)">🔥 Warm Tone</option>
+                                <option value="grayscale(80%) brightness(130%)">📰 Classic</option>
+                                <option value="invert(20%) sepia(60%)">🎭 Retro</option>
+                                <option value="contrast(250%) saturate(50%)">⚡ Strong Contrast</option>
+            </select>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+            <!-- Row 3: Special Effects -->
+            <div class="control-row">
+                <div class="filter-selector compact">
+                    <h3>✨ Efek Khusus</h3>
+                    <div class="special-effects compact-effects">
+                <button onclick="applySpecialEffect('pulse')" class="effect-btn">💓 Pulse</button>
+                <button onclick="applySpecialEffect('shake')" class="effect-btn">📳 Shake</button>
+                <button onclick="applySpecialEffect('glow')" class="effect-btn">✨ Glow</button>
+                        <button onclick="applySpecialEffect('love')" class="effect-btn">💕 Love</button>
+                        <button onclick="applySpecialEffect('hearts')" class="effect-btn">💖 Hearts</button>
+                        <button onclick="applySpecialEffect('romantic')" class="effect-btn">🌹 Romantic</button>
+                        <button onclick="applySpecialEffect('sparkle')" class="effect-btn">✨ Sparkle</button>
+                <button onclick="applySpecialEffect('clear')" class="effect-btn">🔄 Clear</button>
+                    </div>
+            </div>
+        </div>
+
+            <!-- Row 4: Love Modes & Celebration -->
+            <div class="control-row">
+                <div class="filter-selector compact">
+                    <h3>💕 Mode Love & Celebration</h3>
+                    <div class="love-celebration-grid">
+                        <div class="love-modes compact-love">
+                            <button onclick="activateLoveMode('sweet')" class="love-btn">🍯 Sweet</button>
+                            <button onclick="activateLoveMode('passionate')" class="love-btn">🔥 Passionate</button>
+                            <button onclick="activateLoveMode('dreamy')" class="love-btn">💭 Dreamy</button>
+                            <button onclick="activateLoveMode('magical')" class="love-btn">✨ Magical</button>
+                            <button onclick="deactivateLoveMode()" class="love-btn clear-btn">🔄 Clear</button>
+                        </div>
+                        
+                        <div class="celebration-love compact-celebration">
+                            <button onclick="startLoveCelebration()" class="celebration-btn">💝 Celebration</button>
+                            <button onclick="stopLoveCelebration()" class="celebration-btn stop-btn">🛑 Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 5: Advanced Controls -->
+            <div class="control-row">
+                <div class="filter-selector compact">
+                    <h3>⚙️ Kontrol Lanjutan</h3>
+                    <div class="advanced-controls">
+                        <div class="effect-mode compact-mode">
+                <button onclick="toggleEffectMode()" id="effectModeBtn" class="mode-btn">🎨 GLFX Mode</button>
+                <button onclick="emergencyStop()" class="emergency-btn">🛑 Stop Efek</button>
+                        </div>
+                        <p style="font-size: 11px; color: #666; margin-top: 8px; text-align: center;">
+                            💡 GLFX: Efek lensa advanced | CSS: Efek sederhana
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 6: Countdown Timer -->
+            <div class="control-row">
+                <div class="filter-selector compact">
+                    <h3>⏰ Hitungan Mundur</h3>
+                    <div class="countdown-controls">
+                        <div class="countdown-settings">
+                            <div class="countdown-option">
+                                <label>Durasi:</label>
+                                <select id="countdownDuration" onchange="updateCountdownSettings()">
+                                    <option value="0">⚡ Langsung</option>
+                                    <option value="3">3 detik</option>
+                                    <option value="5" selected>5 detik</option>
+                                    <option value="10">10 detik</option>
+                                    <option value="15">15 detik</option>
+                                </select>
+                            </div>
+                            <div class="countdown-option">
+                                <label>Suara:</label>
+                                <select id="countdownSound" onchange="updateCountdownSettings()">
+                                    <option value="none">🔇 Tanpa Suara</option>
+                                    <option value="beep" selected>🔊 Beep</option>
+                                    <option value="voice">🎤 Suara</option>
+                                    <option value="music">🎵 Musik</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="countdown-buttons">
+                            <button onclick="startCountdown()" id="countdownBtn" class="countdown-btn">⏰ Mulai Countdown</button>
+                            <button onclick="stopCountdown()" id="stopCountdownBtn" class="countdown-btn stop-btn" style="display: none;">🛑 Stop</button>
+                        </div>
+                        <div id="countdownDisplay" class="countdown-display" style="display: none;">
+                            <span id="countdownNumber">5</span>
+                            <div id="elapsedTime" style="font-size:18px;margin-top:10px;opacity:0.8;">0 detik</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="glfx.min.js"></script>
+    <script>
+        let video;
+        let canvas;
+        let fxCanvas;
+        let texture;
+        let currentEffect = 'none';
+        let capturedPhoto = null;
+        let isPhotoTaken = false;
+        let frameEnabled = true;
+        let isCameraInitialized = false;
+        let useGlfx = false; // Flag to control glfx usage
+        let renderLoopActive = false; // Flag to control render loop
+        let lastRenderTime = 0; // For throttling
+        const RENDER_THROTTLE = 1000 / 30; // 30 FPS max
+
+        // Performance monitoring
+        let frameCount = 0;
+        let lastFpsCheck = 0;
+        let currentFps = 0;
+
+        function checkPerformance() {
+            frameCount++;
+            const now = performance.now();
+            
+            if (now - lastFpsCheck >= 1000) {
+                currentFps = frameCount;
+                frameCount = 0;
+                lastFpsCheck = now;
+                
+                // If FPS is too low, stop GLFX rendering
+                if (currentFps < 15 && renderLoopActive) {
+                    console.warn('Low FPS detected, stopping GLFX render loop');
+                    renderLoopActive = false;
+                    alert('Performansi rendah terdeteksi. Efek GLFX dihentikan untuk mencegah freeze.');
+                }
+            }
+        }
+
+        // Helper to update camera status
+        function setCameraStatus(msg, isError = false) {
+            const statusDiv = document.getElementById('cameraStatus');
+            if (statusDiv) {
+                statusDiv.textContent = msg;
+                statusDiv.style.background = isError ? 'rgba(200,0,0,0.8)' : 'rgba(0,0,0,0.7)';
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        function restartCamera() {
+            console.log('Restarting camera...');
+            setCameraStatus('🔄 Restart Kamera...');
+            
+            // Stop current video stream
+            if (video && video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            
+            // Reset state
+            isCameraInitialized = false;
+            renderLoopActive = false;
+            
+            // Clear any existing video element
+            if (video) {
+                video.remove();
+                video = null;
+            }
+            
+            // Reset glfx canvas
+            if (fxCanvas) {
+                fxCanvas.remove();
+                fxCanvas = null;
+                texture = null;
+            }
+            
+            // Reinitialize camera
+            setTimeout(() => {
+                initializeCamera();
+            }, 1000);
+        }
+
+        function forceRestartCamera() {
+            console.log('Force restarting camera...');
+            setCameraStatus('🚨 Force Restart Kamera...');
+            
+            // Stop all media streams
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        const tracks = stream.getTracks();
+                        tracks.forEach(track => track.stop());
+                    })
+                    .catch(() => {}); // Ignore errors
+            }
+            
+            // Stop current video stream
+            if (video && video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            
+            // Reset all state variables
+            isCameraInitialized = false;
+            renderLoopActive = false;
+            currentEffect = 'mirror';
+            useGlfx = false;
+            
+            // Clear any existing video element
+            if (video) {
+                video.remove();
+                video = null;
+            }
+            
+            // Reset glfx canvas
+            if (fxCanvas) {
+                fxCanvas.remove();
+                fxCanvas = null;
+                texture = null;
+            }
+            
+            // Reset UI elements
+            const statusDiv = document.getElementById('cameraStatus');
+            if (statusDiv) {
+                statusDiv.style.display = 'none';
+            }
+            
+            // Reset effect selectors
+            const effectSelect = document.getElementById('effectSelect');
+            if (effectSelect) {
+                effectSelect.value = 'mirror';
+            }
+            
+            const colorFilterSelect = document.getElementById('colorFilterSelect');
+            if (colorFilterSelect) {
+                colorFilterSelect.value = 'none';
+            }
+            
+            // Reset effect mode button
+            const modeBtn = document.getElementById('effectModeBtn');
+            if (modeBtn) {
+                modeBtn.textContent = '🎨 CSS Mode (Aktif)';
+                modeBtn.style.backgroundColor = '#ff5722';
+            }
+            
+            // Force restart after a longer delay
+            setTimeout(() => {
+                console.log('Force restart: reinitializing camera...');
+                initializeCamera();
+            }, 2000);
+        }
+
+        // Initialize camera with fallback options
+        function initializeCamera() {
+            setCameraStatus('🔄 Inisialisasi Kamera...');
+            
+            // Add timeout to prevent stuck
+            const initTimeout = setTimeout(() => {
+                setCameraStatus('❌ Timeout inisialisasi kamera', true);
+                console.error('Camera initialization timeout');
+            }, 10000); // 10 second timeout
+            
+            // Check if we already have a video element
+            let videoElement = document.querySelector('#fxCanvas');
+            if (!videoElement || videoElement.tagName !== 'VIDEO') {
+                // Create new video element only if needed
+                videoElement = document.createElement('video');
+                videoElement.id = 'fxCanvas';
+            videoElement.autoplay = true;
+            videoElement.muted = true;
+            videoElement.playsInline = true;
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.borderRadius = '16px';
+            videoElement.style.objectFit = 'cover';
+            
+                // Try to replace the canvas with video element
+            const placeholderCanvas = document.getElementById('fxCanvas');
+                if (placeholderCanvas) {
+            placeholderCanvas.parentNode.replaceChild(videoElement, placeholderCanvas);
+                } else {
+                    // If no placeholder, find the photobooth container and add video
+                    const container = document.querySelector('.photobooth-container');
+                    if (container) {
+                        // Remove any existing video elements first
+                        const existingVideos = container.querySelectorAll('video');
+                        existingVideos.forEach(v => v.remove());
+                        
+                        // Insert video at the beginning of container
+                        container.insertBefore(videoElement, container.firstChild);
+                    } else {
+                        console.error('Could not find photobooth container');
+                        clearTimeout(initTimeout);
+                        setCameraStatus('❌ Container tidak ditemukan', true);
+                        return;
+                    }
+                }
+            }
+            
+            const constraints = {
+                video: {
+                    width: { ideal: 640, min: 320 },
+                    height: { ideal: 480, min: 240 },
+                    facingMode: 'user'
+                }
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(stream => {
+                    clearTimeout(initTimeout); // Clear timeout on success
+                    setCameraStatus('✅ Kamera Siap!');
+                    setTimeout(() => {
+                        setCameraStatus('', false);
+                        document.getElementById('cameraStatus').style.display = 'none';
+                    }, 1200);
+                    
+                    video = videoElement;
+                    video.srcObject = stream;
+                    
+                    video.addEventListener('loadedmetadata', () => {
+                        console.log('Video metadata loaded:', video.videoWidth, 'x', video.videoHeight);
+                        
+                        // Create glfx canvas for effects (hidden)
+                        if (typeof fx !== 'undefined') {
+                            try {
+                                fxCanvas = fx.canvas();
+                                fxCanvas.width = video.videoWidth;
+                                fxCanvas.height = video.videoHeight;
+                                fxCanvas.style.display = 'none'; // Hidden
+                                texture = fxCanvas.texture(video);
+                                console.log('Glfx canvas created successfully');
+                            } catch (error) {
+                                console.error('Error creating glfx canvas:', error);
+                            }
+                        }
+                        
+                        isCameraInitialized = true;
+                        console.log('Camera initialized successfully');
+                        
+                        // Apply default mirror effect
+                        currentEffect = 'mirror';
+                        if (video) {
+                            applyCssEffect();
+                        }
+                    });
+
+                    video.addEventListener('error', (error) => {
+                        clearTimeout(initTimeout);
+                        setCameraStatus('❌ Error video stream', true);
+                        console.error('Video error:', error);
+                    });
+                })
+                .catch(error => {
+                    clearTimeout(initTimeout);
+                    setCameraStatus('❌ Tidak dapat mengakses kamera', true);
+                    console.error('Camera access error:', error);
+                    
+                    // Try with simpler constraints
+                    const fallbackTimeout = setTimeout(() => {
+                        setCameraStatus('❌ Timeout fallback kamera', true);
+                        console.error('Fallback camera timeout');
+                    }, 8000); // 8 second timeout for fallback
+                    
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(stream => {
+                            clearTimeout(fallbackTimeout);
+                            setCameraStatus('✅ Kamera Siap!');
+                            setTimeout(() => {
+                                setCameraStatus('', false);
+                                document.getElementById('cameraStatus').style.display = 'none';
+                            }, 1200);
+                            
+                            video = videoElement;
+                            video.srcObject = stream;
+                            
+                            video.addEventListener('loadedmetadata', () => {
+                                console.log('Fallback video metadata loaded:', video.videoWidth, 'x', video.videoHeight);
+                                
+                                // Create glfx canvas for effects (hidden)
+                                if (typeof fx !== 'undefined') {
+                                    try {
+                                        fxCanvas = fx.canvas();
+                                        fxCanvas.width = video.videoWidth;
+                                        fxCanvas.height = video.videoHeight;
+                                        fxCanvas.style.display = 'none'; // Hidden
+                                        texture = fxCanvas.texture(video);
+                                        console.log('Glfx canvas created successfully');
+                                    } catch (error) {
+                                        console.error('Error creating glfx canvas:', error);
+                                    }
+                                }
+                                
+                                isCameraInitialized = true;
+                                console.log('Fallback camera initialized successfully');
+                                
+                                // Apply default mirror effect
+                                currentEffect = 'mirror';
+                                if (video) {
+                                    applyCssEffect();
+                                }
+                            });
+                        })
+                        .catch(fallbackError => {
+                            clearTimeout(fallbackTimeout);
+                            setCameraStatus('❌ Kamera tidak terdeteksi', true);
+                            console.error('Fallback camera error:', fallbackError);
+                            alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera dan kamera tidak sedang digunakan aplikasi lain.');
+                        });
+                });
+        }
+
+        // Debug function to check video status
+        function checkVideoStatus() {
+            if (video) {
+                console.log('Video status:', {
+                    paused: video.paused,
+                    ended: video.ended,
+                    readyState: video.readyState,
+                    videoWidth: video.videoWidth,
+                    videoHeight: video.videoHeight,
+                    currentTime: video.currentTime,
+                    isCameraInitialized: isCameraInitialized
+                });
+            } else {
+                console.log('Video not initialized');
+            }
+        }
+
+        // Debug function to check all camera state
+        function debugCameraState() {
+            console.log('=== Camera Debug Info ===');
+            console.log('Video element:', !!video);
+            console.log('FX Canvas:', !!fxCanvas);
+            console.log('Texture:', !!texture);
+            console.log('Camera initialized:', isCameraInitialized);
+            console.log('Render loop active:', renderLoopActive);
+            console.log('Current effect:', currentEffect);
+            console.log('Use GLFX:', useGlfx);
+            
+            // Check DOM elements
+            const videoInDOM = document.querySelector('#fxCanvas');
+            console.log('Video in DOM:', !!videoInDOM, videoInDOM ? videoInDOM.tagName : 'N/A');
+            
+            const container = document.querySelector('.photobooth-container');
+            console.log('Container found:', !!container);
+            
+            if (container) {
+                const videos = container.querySelectorAll('video');
+                console.log('Videos in container:', videos.length);
+                videos.forEach((v, i) => {
+                    console.log(`Video ${i}:`, {
+                        id: v.id,
+                        srcObject: !!v.srcObject,
+                        paused: v.paused,
+                        readyState: v.readyState
+                    });
+                });
+            }
+            
+            // Check media streams
+            if (video && video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                console.log('Active tracks:', tracks.length);
+                tracks.forEach((track, i) => {
+                    console.log(`Track ${i}:`, {
+                        kind: track.kind,
+                        enabled: track.enabled,
+                        readyState: track.readyState
+                    });
+                });
+            }
+            
+            console.log('=== End Debug Info ===');
+        }
+
+        // Initialize camera when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing camera...');
+            initializeCamera();
+            
+            // Check video status every 3 seconds
+            setInterval(checkVideoStatus, 3000);
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Spacebar to take photo/countdown
+                if (e.code === 'Space' && !isPhotoTaken) {
+                    e.preventDefault();
+                    captureWithCountdown();
+                }
+                
+                // C key to start countdown/foto
+                if (e.code === 'KeyC' && !countdownActive && !isPhotoTaken) {
+                    e.preventDefault();
+                    captureWithCountdown();
+                }
+                
+                // H key to hide/show camera controls
+                if (e.code === 'KeyH') {
+                    e.preventDefault();
+                    toggleCameraControls();
+                }
+                
+                // Escape to retake photo or stop countdown
+                if (e.code === 'Escape') {
+                    e.preventDefault();
+                    if (countdownActive) {
+                        stopCountdown();
+                    } else if (isPhotoTaken) {
+                        retakePhoto();
+                    }
+                }
+            });
+            
+            // Double click on photobooth container to hide/show controls
+            const container = document.querySelector('.photobooth-container');
+            if (container) {
+                container.addEventListener('dblclick', (e) => {
+                    // Don't trigger if clicking on buttons
+                    if (!e.target.closest('.camera-controls')) {
+                        toggleCameraControls();
+                    }
+                });
+            }
+            
+            // Auto-hide controls hint after 5 seconds
+            setTimeout(() => {
+                const hint = document.getElementById('controlsHint');
+                if (hint) {
+                    hint.style.display = 'none';
+                }
+            }, 5000);
+        });
+
+        function toggleCameraControls() {
+            const controls = document.querySelector('.camera-controls');
+            const hint = document.getElementById('controlsHint');
+            
+            if (controls.style.opacity === '0') {
+                controls.style.opacity = '1';
+                controls.style.pointerEvents = 'auto';
+                // Show hint briefly when controls are shown
+                if (hint) {
+                    hint.style.display = 'block';
+                    setTimeout(() => {
+                        hint.style.display = 'none';
+                    }, 3000);
+                }
+            } else {
+                controls.style.opacity = '0';
+                controls.style.pointerEvents = 'none';
+                // Hide hint when controls are hidden
+                if (hint) {
+                    hint.style.display = 'none';
+                }
+            }
+        }
+
+        function applyLensEffect() {
+            currentEffect = document.getElementById('effectSelect').value;
+            console.log('Lens effect changed to:', currentEffect);
+            console.log('useGlfx:', useGlfx, 'fxCanvas:', !!fxCanvas, 'video:', !!video);
+            
+            // Check if glfx effects are available and enabled
+            const glfxEffects = ['fisheye', 'bulge', 'pinch'];
+            const shouldUseGlfx = glfxEffects.includes(currentEffect) && typeof fx !== 'undefined' && useGlfx;
+            
+            console.log('shouldUseGlfx:', shouldUseGlfx, 'fx available:', typeof fx !== 'undefined');
+            
+            if (shouldUseGlfx && fxCanvas) {
+                console.log('Applying GLFX effect:', currentEffect);
+                // Use glfx for advanced effects
+                applyGlfxEffect();
+            } else if (video) {
+                console.log('Applying CSS effect:', currentEffect);
+                // Use CSS effects for simple effects
+                applyCssEffect();
+            } else {
+                console.log('No effect applied - missing video or canvas');
+            }
+        }
+
+        function applyGlfxEffect() {
+            if (!fxCanvas || !texture) return;
+            
+            try {
+                // Reset canvas
+                fxCanvas.draw(texture);
+                
+                // Apply glfx effects
+                switch(currentEffect) {
+                    case 'fisheye':
+                        fxCanvas.fisheye(0.5);
+                        break;
+                    case 'bulge':
+                        fxCanvas.bulgePinch(fxCanvas.width / 2, fxCanvas.height / 2, fxCanvas.width / 2, 0.5);
+                        break;
+                    case 'pinch':
+                        fxCanvas.bulgePinch(fxCanvas.width / 2, fxCanvas.height / 2, fxCanvas.width / 2, -0.5);
+                        break;
+                }
+                
+                fxCanvas.update();
+                
+                // Start render loop for real-time effects
+                if (!renderLoopActive) {
+                    renderLoopActive = true;
+                    renderGlfx();
+                }
+            } catch (error) {
+                console.error('Error applying GLFX effect:', error);
+                renderLoopActive = false;
+            }
+        }
+
+        function applyCssEffect() {
+            console.log('applyCssEffect called with currentEffect:', currentEffect);
+            if (!video) {
+                console.log('No video element available for CSS effects');
+                return;
+            }
+            
+            // Stop GLFX render loop
+            renderLoopActive = false;
+            
+            // Reset previous effects
+            video.style.transform = '';
+            video.style.borderRadius = '16px';
+            video.style.filter = '';
+            video.className = ''; // Remove animation classes
+            
+            console.log('Reset video styles');
+            
+            // Apply CSS effects
+            switch(currentEffect) {
+                case 'mirror':
+                    video.style.transform = 'scaleX(-1)';
+                    console.log('Applied mirror effect');
+                    break;
+                case 'vintage':
+                    video.style.filter = 'grayscale(50%) sepia(50%) brightness(110%)';
+                    console.log('Applied vintage effect');
+                    break;
+                case 'zoom':
+                    video.style.transform = 'scale(1.3)';
+                    console.log('Applied zoom effect');
+                    break;
+                case 'tilt':
+                    video.style.transform = 'skew(10deg)';
+                    console.log('Applied tilt effect');
+                    break;
+                case 'dramatic':
+                    video.style.filter = 'contrast(200%) brightness(120%) saturate(150%)';
+                    video.style.transform = 'scale(1.05)';
+                    video.classList.add('video-glow');
+                    console.log('Applied dramatic effect');
+                    break;
+                case 'dreamy':
+                    video.style.filter = 'blur(1px) brightness(110%) saturate(80%)';
+                    video.style.transform = 'scale(1.02)';
+                    console.log('Applied dreamy effect');
+                    break;
+                case 'neon':
+                    video.style.filter = 'brightness(150%) contrast(200%) saturate(300%) hue-rotate(180deg)';
+                    video.classList.add('video-pulse');
+                    console.log('Applied neon effect');
+                    break;
+                default:
+                    console.log('No CSS effect applied for:', currentEffect);
+                    break;
+            }
+            
+            console.log('Final video styles:', {
+                transform: video.style.transform,
+                filter: video.style.filter,
+                className: video.className
+            });
+        }
+
+        function applyColorFilter() {
+            const filterValue = document.getElementById('colorFilterSelect').value;
+            if (video) {
+                // Get current lens effect filter
+                let currentLensFilter = '';
+                if (currentEffect === 'vintage') {
+                    currentLensFilter = 'grayscale(50%) sepia(50%) brightness(110%) ';
+                } else if (currentEffect === 'dramatic') {
+                    currentLensFilter = 'contrast(200%) brightness(120%) saturate(150%) ';
+                } else if (currentEffect === 'dreamy') {
+                    currentLensFilter = 'blur(1px) brightness(110%) saturate(80%) ';
+                } else if (currentEffect === 'neon') {
+                    currentLensFilter = 'brightness(150%) contrast(200%) saturate(300%) hue-rotate(180deg) ';
+                }
+                
+                // Combine lens effect filter with color filter
+                if (filterValue !== 'none') {
+                    video.style.filter = currentLensFilter + filterValue;
+                } else {
+                    video.style.filter = currentLensFilter;
+                }
+                
+                console.log('Color filter applied:', filterValue);
+            }
+        }
+
+        function changeFrame(frameSrc) {
+            // Show and update the original image frame
+            const originalFrame = document.getElementById('photoFrame');
+            if (originalFrame && originalFrame.tagName === 'IMG') {
+                originalFrame.src = frameSrc;
+                originalFrame.style.display = 'block';
+            }
+            
+            frameEnabled = true;
+            console.log('Image frame changed to:', frameSrc);
+        }
+
+        function disableFrame() {
+            frameEnabled = false;
+            // Hide the original image frame
+            const originalFrame = document.getElementById('photoFrame');
+            if (originalFrame && originalFrame.tagName === 'IMG') {
+                originalFrame.style.display = 'none';
+            }
+            
+            console.log("Frame disabled");
+        }
+
+        function takePhoto() {
+            // Stop countdown if active
+            if (countdownActive) {
+                stopCountdown();
+            }
+            
+            const frame = document.getElementById('photoFrame');
+            const previewCanvas = document.getElementById('previewCanvas');
+            
+            // Determine source for capture
+            let captureSource = video;
+            let sourceWidth = video.videoWidth;
+            let sourceHeight = video.videoHeight;
+            
+            // If using glfx effects, capture from glfx canvas
+            if (useGlfx && fxCanvas) {
+                captureSource = fxCanvas;
+                sourceWidth = fxCanvas.width;
+                sourceHeight = fxCanvas.height;
+            }
+            
+            // Create a temporary canvas to capture the frame
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = sourceWidth;
+            tempCanvas.height = sourceHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the current frame
+            tempCtx.drawImage(captureSource, 0, 0, sourceWidth, sourceHeight);
+            
+            // Set preview canvas size
+            previewCanvas.width = sourceWidth;
+            previewCanvas.height = sourceHeight;
+            
+            const context = previewCanvas.getContext('2d');
+            
+            // Clear canvas first
+            context.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Draw the captured frame
+            context.drawImage(tempCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Only add frame if frame is enabled
+            if (frameEnabled) {
+                // Load and draw the frame on top
+                const img = new Image();
+                img.onload = () => {
+                    // Draw frame on top of the captured image
+                    context.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height);
+                    
+                    // Store the captured photo data
+                    capturedPhoto = previewCanvas.toDataURL('image/png');
+                    
+                    // Show preview and buttons
+                    document.getElementById('photoPreview').style.display = 'block';
+                    document.querySelector('.action-buttons').style.display = 'flex';
+                    document.getElementById('captureBtn').style.display = 'none';
+                    document.getElementById('captureNoFrameBtn').style.display = 'none';
+                    
+                    isPhotoTaken = true;
+                    
+                    console.log('Photo captured successfully with frame');
+                };
+                img.onerror = () => {
+                    console.error('Error loading frame image');
+                    // If frame fails to load, still save the photo without frame
+                    capturedPhoto = previewCanvas.toDataURL('image/png');
+                    document.getElementById('photoPreview').style.display = 'block';
+                    document.querySelector('.action-buttons').style.display = 'flex';
+                    document.getElementById('captureBtn').style.display = 'none';
+                    document.getElementById('captureNoFrameBtn').style.display = 'none';
+                    isPhotoTaken = true;
+                };
+                img.src = frame.src;
+            } else {
+                // No frame, save photo directly
+                capturedPhoto = previewCanvas.toDataURL('image/png');
+                document.getElementById('photoPreview').style.display = 'block';
+                document.querySelector('.action-buttons').style.display = 'flex';
+                document.getElementById('captureBtn').style.display = 'none';
+                document.getElementById('captureNoFrameBtn').style.display = 'none';
+                isPhotoTaken = true;
+                
+                console.log('Photo captured successfully without frame');
+            }
+        }
+
+        function takePhotoWithoutFrame() {
+            // Stop countdown if active
+            if (countdownActive) {
+                stopCountdown();
+            }
+            
+            const previewCanvas = document.getElementById('previewCanvas');
+            
+            // Determine source for capture
+            let captureSource = video;
+            let sourceWidth = video.videoWidth;
+            let sourceHeight = video.videoHeight;
+            
+            // If using glfx effects, capture from glfx canvas
+            if (useGlfx && fxCanvas) {
+                captureSource = fxCanvas;
+                sourceWidth = fxCanvas.width;
+                sourceHeight = fxCanvas.height;
+            }
+            
+            // Create a temporary canvas to capture the frame
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = sourceWidth;
+            tempCanvas.height = sourceHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Draw the current frame
+            tempCtx.drawImage(captureSource, 0, 0, sourceWidth, sourceHeight);
+            
+            // Set preview canvas size
+            previewCanvas.width = sourceWidth;
+            previewCanvas.height = sourceHeight;
+            
+            const context = previewCanvas.getContext('2d');
+            
+            // Clear canvas first
+            context.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Draw the captured frame
+            context.drawImage(tempCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
+            
+            // Store the captured photo data
+            capturedPhoto = previewCanvas.toDataURL('image/png');
+            
+            // Show preview and buttons
+            document.getElementById('photoPreview').style.display = 'block';
+            document.querySelector('.action-buttons').style.display = 'flex';
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('captureNoFrameBtn').style.display = 'none';
+            
+            isPhotoTaken = true;
+            
+            console.log('Photo captured without frame successfully');
+        }
+
+        function downloadPhoto() {
+            if (capturedPhoto) {
+                const link = document.createElement('a');
+                link.download = 'foto_photobooth_' + new Date().getTime() + '.png';
+                link.href = capturedPhoto;
+                link.click();
+            }
+        }
+
+        function retakePhoto() {
+            // Hide preview and buttons
+            document.getElementById('photoPreview').style.display = 'none';
+            document.querySelector('.action-buttons').style.display = 'none';
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('captureNoFrameBtn').style.display = 'inline-block';
+            
+            // Restore frame display if it was disabled
+            if (!frameEnabled) {
+                document.getElementById('photoFrame').style.display = 'block';
+            }
+            
+            capturedPhoto = null;
+            isPhotoTaken = false;
+        }
+
+        function applySpecialEffect(effect) {
+            if (video) {
+                // Remove all animation classes first
+                video.classList.remove('video-pulse', 'video-shake', 'video-glow', 'video-love', 'video-hearts', 'video-romantic', 'video-sparkle');
+                
+                // Stop floating hearts if any
+                stopFloatingHearts();
+                
+                switch(effect) {
+                    case 'pulse':
+                        video.classList.add('video-pulse');
+                        break;
+                    case 'shake':
+                        video.classList.add('video-shake');
+                        break;
+                    case 'glow':
+                        video.classList.add('video-glow');
+                        break;
+                    case 'love':
+                        video.classList.add('video-love');
+                        startFloatingHearts('💕');
+                        break;
+                    case 'hearts':
+                        video.classList.add('video-hearts');
+                        startFloatingHearts('💖');
+                        break;
+                    case 'romantic':
+                        video.classList.add('video-romantic');
+                        startFloatingHearts('🌹');
+                        break;
+                    case 'sparkle':
+                        video.classList.add('video-sparkle');
+                        startFloatingHearts('✨');
+                        break;
+                    case 'clear':
+                        // Already removed classes above
+                        break;
+                }
+                console.log('Special effect applied:', effect);
+            }
+        }
+
+        let floatingHeartsInterval = null;
+
+        function startFloatingHearts(emoji) {
+            stopFloatingHearts(); // Stop any existing hearts
+            
+            floatingHeartsInterval = setInterval(() => {
+                createFloatingHeart(emoji);
+            }, 800);
+        }
+
+        function stopFloatingHearts() {
+            if (floatingHeartsInterval) {
+                clearInterval(floatingHeartsInterval);
+                floatingHeartsInterval = null;
+            }
+            
+            // Remove existing floating hearts
+            const existingHearts = document.querySelectorAll('.floating-heart');
+            existingHearts.forEach(heart => heart.remove());
+        }
+
+        function createFloatingHeart(emoji) {
+            const container = document.querySelector('.photobooth-container');
+            if (!container) return;
+            
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.textContent = emoji;
+            heart.style.cssText = `
+                position: absolute;
+                font-size: 24px;
+                pointer-events: none;
+                z-index: 15;
+                animation: floatingHearts 4s linear forwards;
+                left: ${Math.random() * 80 + 10}%;
+                bottom: -50px;
+            `;
+            
+            container.appendChild(heart);
+            
+            // Remove heart after animation
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.remove();
+                }
+            }, 4000);
+        }
+
+        // Render function for glfx effects
+        function renderGlfx() {
+            const now = performance.now();
+            
+            // Check performance
+            checkPerformance();
+            
+            // Throttle rendering to prevent freezing
+            if (now - lastRenderTime < RENDER_THROTTLE) {
+                if (renderLoopActive) {
+                    requestAnimationFrame(renderGlfx);
+                }
+                return;
+            }
+            
+            if (useGlfx && fxCanvas && texture && video && !video.paused && !video.ended && renderLoopActive) {
+                try {
+                    texture.loadContentsOf(video);
+                    applyGlfxEffect();
+                    lastRenderTime = now;
+                    requestAnimationFrame(renderGlfx);
+                } catch (error) {
+                    console.error('GLFX render error:', error);
+                    renderLoopActive = false;
+                }
+            } else {
+                renderLoopActive = false;
+            }
+        }
+
+        function toggleEffectMode() {
+            useGlfx = !useGlfx;
+            const modeBtn = document.getElementById('effectModeBtn');
+            
+            if (useGlfx) {
+                modeBtn.textContent = '🎨 GLFX Mode (Aktif)';
+                modeBtn.style.backgroundColor = '#4caf50';
+                console.log('Effect mode: GLFX');
+                
+                if (fxCanvas && currentEffect !== 'none') {
+                    applyGlfxEffect();
+                }
+            } else {
+                modeBtn.textContent = '🎨 CSS Mode (Aktif)';
+                modeBtn.style.backgroundColor = '#ff5722';
+                console.log('Effect mode: CSS');
+                
+                if (video && currentEffect !== 'none') {
+                    applyCssEffect();
+                }
+            }
+        }
+
+        function emergencyStop() {
+            console.log('Emergency stop requested');
+            renderLoopActive = false;
+            if (useGlfx && fxCanvas) {
+                fxCanvas.draw(texture);
+                fxCanvas.update();
+            }
+            if (video) {
+                video.style.transform = '';
+                video.style.borderRadius = '16px';
+                video.style.filter = '';
+                video.className = '';
+            }
+        }
+
+        function toggleAdvancedControls() {
+            const advancedControls = document.querySelector('.camera-controls-advanced');
+            const toggleBtn = document.getElementById('toggleControlsBtn');
+            
+            if (advancedControls.style.display === 'none') {
+                advancedControls.style.display = 'flex';
+                toggleBtn.textContent = '▼';
+            } else {
+                advancedControls.style.display = 'none';
+                toggleBtn.textContent = '⚙️';
+            }
+        }
+
+        function toggleCleanMode() {
+            const mainButtons = document.querySelector('.button-group:first-child');
+            const advancedControls = document.querySelector('.camera-controls-advanced');
+            const toggleButtons = document.querySelector('.button-group:nth-child(3)');
+            const cleanBtn = document.getElementById('cleanModeBtn');
+            
+            if (mainButtons.style.display === 'none') {
+                // Show all controls
+                mainButtons.style.display = 'flex';
+                toggleButtons.style.display = 'flex';
+                cleanBtn.textContent = '🎯';
+                cleanBtn.title = 'Clean Mode';
+            } else {
+                // Show only capture button
+                mainButtons.style.display = 'none';
+                advancedControls.style.display = 'none';
+                toggleButtons.style.display = 'none';
+                cleanBtn.textContent = '🔧';
+                cleanBtn.title = 'Show All Controls';
+                
+                // Show only the capture button
+                const captureBtn = document.getElementById('captureBtn');
+                if (captureBtn) {
+                    captureBtn.style.display = 'inline-block';
+                    captureBtn.style.position = 'absolute';
+                    captureBtn.style.bottom = '20px';
+                    captureBtn.style.left = '50%';
+                    captureBtn.style.transform = 'translateX(-50%)';
+                    captureBtn.style.zIndex = '10';
+                }
+            }
+        }
+
+        function deactivateLoveMode() {
+            // Remove all love effects
+            if (video) {
+                video.classList.remove('video-love', 'video-hearts', 'video-romantic', 'video-sparkle');
+                video.style.filter = '';
+                video.style.transform = '';
+            }
+            stopFloatingHearts();
+            console.log('Love mode deactivated');
+        }
+
+        function activateLoveMode(mode) {
+            if (!video) return;
+            
+            // Clear previous effects first
+            deactivateLoveMode();
+            
+            switch(mode) {
+                case 'sweet':
+                    video.classList.add('video-love');
+                    video.style.filter = 'hue-rotate(340deg) saturate(120%) brightness(105%)';
+                    startFloatingHearts('💕');
+                    createHeartBorder('sweet');
+                    break;
+                    
+                case 'passionate':
+                    video.classList.add('video-hearts');
+                    video.style.filter = 'hue-rotate(350deg) saturate(150%) brightness(110%) contrast(110%)';
+                    startFloatingHearts('💖');
+                    createHeartBorder('passionate');
+                    break;
+                    
+                case 'dreamy':
+                    video.classList.add('video-romantic');
+                    video.style.filter = 'blur(0.5px) hue-rotate(345deg) saturate(130%) brightness(108%)';
+                    startFloatingHearts('🌹');
+                    createHeartBorder('dreamy');
+                    break;
+                    
+                case 'magical':
+                    video.classList.add('video-sparkle');
+                    video.style.filter = 'hue-rotate(30deg) saturate(140%) brightness(115%) contrast(105%)';
+                    startFloatingHearts('✨');
+                    createHeartBorder('magical');
+                    break;
+            }
+            
+            console.log('Love mode activated:', mode);
+        }
+
+        function createHeartBorder(type) {
+            const container = document.querySelector('.photobooth-container');
+            if (!container) return;
+            
+            // Remove existing border
+            const existingBorder = document.querySelector('.heart-border');
+            if (existingBorder) {
+                existingBorder.remove();
+            }
+            
+            const border = document.createElement('div');
+            border.className = 'heart-border';
+            
+            let borderStyle = '';
+            switch(type) {
+                case 'sweet':
+                    borderStyle = 'border: 3px solid rgba(255, 105, 180, 0.8); box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);';
+                    break;
+                case 'passionate':
+                    borderStyle = 'border: 4px solid rgba(255, 20, 147, 0.9); box-shadow: 0 0 25px rgba(255, 20, 147, 0.7);';
+                    break;
+                case 'dreamy':
+                    borderStyle = 'border: 3px solid rgba(199, 21, 133, 0.8); box-shadow: 0 0 30px rgba(199, 21, 133, 0.5);';
+                    break;
+                case 'magical':
+                    borderStyle = 'border: 3px solid rgba(255, 215, 0, 0.8); box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);';
+                    break;
+            }
+            
+            border.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-radius: 16px;
+                pointer-events: none;
+                z-index: 5;
+                ${borderStyle}
+                animation: heartBeat 2s infinite;
+            `;
+            
+            container.appendChild(border);
+        }
+
+        let celebrationInterval = null;
+        let celebrationActive = false;
+
+        function startLoveCelebration() {
+            if (celebrationActive) return;
+            
+            celebrationActive = true;
+            console.log('Love celebration started!');
+            
+            // Apply romantic video effects
+            if (video) {
+                video.classList.add('video-romantic');
+                video.style.filter = 'hue-rotate(340deg) saturate(140%) brightness(110%) contrast(105%)';
+            }
+            
+            // Create heart border
+            createHeartBorder('celebration');
+            
+            // Start multiple floating elements
+            celebrationInterval = setInterval(() => {
+                createFloatingHeart('💕');
+                setTimeout(() => createFloatingHeart('💖'), 200);
+                setTimeout(() => createFloatingHeart('🌹'), 400);
+                setTimeout(() => createFloatingHeart('✨'), 600);
+                setTimeout(() => createFloatingHeart('💝'), 800);
+            }, 1000);
+            
+            // Create special celebration elements
+            createCelebrationElements();
+        }
+
+        function stopLoveCelebration() {
+            celebrationActive = false;
+            
+            if (celebrationInterval) {
+                clearInterval(celebrationInterval);
+                celebrationInterval = null;
+            }
+            
+            // Remove celebration effects
+            if (video) {
+                video.classList.remove('video-romantic');
+                video.style.filter = '';
+            }
+            
+            // Remove heart border
+            const existingBorder = document.querySelector('.heart-border');
+            if (existingBorder) {
+                existingBorder.remove();
+            }
+            
+            // Remove celebration elements
+            const celebrationElements = document.querySelectorAll('.celebration-element');
+            celebrationElements.forEach(el => el.remove());
+            
+            // Stop floating hearts
+            stopFloatingHearts();
+            
+            console.log('Love celebration stopped');
+        }
+
+        function createCelebrationElements() {
+            const container = document.querySelector('.photobooth-container');
+            if (!container) return;
+            
+            const emojis = ['💕', '💖', '🌹', '✨', '💝', '💕', '💖', '🌹'];
+            
+            emojis.forEach((emoji, index) => {
+                setTimeout(() => {
+                    const element = document.createElement('div');
+                    element.className = 'celebration-element';
+                    element.textContent = emoji;
+                    element.style.cssText = `
+                        position: absolute;
+                        font-size: 32px;
+                        pointer-events: none;
+                        z-index: 20;
+                        left: ${Math.random() * 80 + 10}%;
+                        top: ${Math.random() * 80 + 10}%;
+                        animation: celebrationFloat 6s ease-in-out infinite;
+                        animation-delay: ${index * 0.5}s;
+                    `;
+                    
+                    container.appendChild(element);
+                }, index * 500);
+            });
+        }
+
+        // Countdown Timer Variables
+        let countdownInterval = null;
+        let countdownActive = false;
+        let countdownDuration = 5;
+        let countdownSound = 'beep';
+        let elapsedTime = 0; // Track elapsed time
+
+        // Countdown Timer Functions
+        function updateCountdownSettings() {
+            countdownDuration = parseInt(document.getElementById('countdownDuration').value);
+            countdownSound = document.getElementById('countdownSound').value;
+            console.log('Countdown settings updated:', { duration: countdownDuration, sound: countdownSound });
+        }
+
+        function startCountdown() {
+            if (countdownActive) return;
+            
+            countdownActive = true;
+            elapsedTime = 0; // Reset elapsed time
+            const duration = parseInt(document.getElementById('countdownDuration').value);
+            
+            if (duration === 0) {
+                // Take photo immediately
+                takePhoto();
+                return;
+            }
+            
+            // Show camera countdown display
+            const cameraCountdown = document.getElementById('cameraCountdown');
+            const cameraCountdownNumber = document.getElementById('cameraCountdownNumber');
+            const cameraElapsedTime = document.getElementById('cameraElapsedTime');
+            const countdownBtn = document.getElementById('countdownBtn');
+            const stopCountdownBtn = document.getElementById('stopCountdownBtn');
+            
+            cameraCountdown.style.display = 'block';
+            countdownBtn.style.display = 'none';
+            stopCountdownBtn.style.display = 'inline-block';
+            
+            let currentCount = duration;
+            cameraCountdownNumber.textContent = currentCount;
+            cameraElapsedTime.textContent = elapsedTime + ' detik';
+            
+            // Play initial sound
+            playCountdownSound();
+            
+            countdownInterval = setInterval(() => {
+                currentCount--;
+                elapsedTime++;
+                cameraCountdownNumber.textContent = currentCount;
+                cameraElapsedTime.textContent = elapsedTime + ' detik';
+                
+                // Play sound for each count
+                playCountdownSound();
+                
+                if (currentCount <= 0) {
+                    // Countdown finished, take photo
+                    clearInterval(countdownInterval);
+                    cameraCountdown.style.display = 'none';
+                    countdownBtn.style.display = 'inline-block';
+                    stopCountdownBtn.style.display = 'none';
+                    countdownActive = false;
+                    
+                    // Play final sound
+                    playFinalSound();
+                    
+                    // Take photo
+                    setTimeout(() => {
+                        takePhoto();
+                    }, 500);
+                }
+            }, 1000);
+            
+            console.log('Countdown started:', duration, 'seconds');
+        }
+
+        function stopCountdown() {
+            if (!countdownActive) return;
+            
+            clearInterval(countdownInterval);
+            countdownActive = false;
+            
+            const cameraCountdown = document.getElementById('cameraCountdown');
+            const countdownBtn = document.getElementById('countdownBtn');
+            const stopCountdownBtn = document.getElementById('stopCountdownBtn');
+            
+            cameraCountdown.style.display = 'none';
+            countdownBtn.style.display = 'inline-block';
+            stopCountdownBtn.style.display = 'none';
+            
+            console.log('Countdown stopped');
+        }
+
+        function playCountdownSound() {
+            const soundType = document.getElementById('countdownSound').value;
+            
+            switch(soundType) {
+                case 'beep':
+                    playBeepSound();
+                    break;
+                case 'voice':
+                    playVoiceCountdown();
+                    break;
+                case 'music':
+                    playMusicSound();
+                    break;
+                case 'none':
+                default:
+                    // No sound
+                    break;
+            }
+        }
+
+        function playFinalSound() {
+            const soundType = document.getElementById('countdownSound').value;
+            
+            switch(soundType) {
+                case 'beep':
+                    playFinalBeep();
+                    break;
+                case 'voice':
+                    playFinalVoice();
+                    break;
+                case 'music':
+                    playFinalMusic();
+                    break;
+                case 'none':
+                default:
+                    // No sound
+                    break;
+            }
+        }
+
+        function playBeepSound() {
+            // Create audio context for beep sound
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (error) {
+                console.log('Audio not supported, using fallback');
+            }
+        }
+
+        function playFinalBeep() {
+            // Play a different beep for final count
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (error) {
+                console.log('Audio not supported, using fallback');
+            }
+        }
+
+        function playVoiceCountdown() {
+            // Use Web Speech API for voice countdown
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance('Siap');
+                utterance.lang = 'id-ID';
+                utterance.rate = 1.2;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function playFinalVoice() {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance('Cekrek!');
+                utterance.lang = 'id-ID';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.2;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function playMusicSound() {
+            // Simple musical tone
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C note
+                oscillator.type = 'triangle';
+                
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (error) {
+                console.log('Audio not supported, using fallback');
+            }
+        }
+
+        function playFinalMusic() {
+            // Play a chord for final count
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create multiple oscillators for a chord
+                const frequencies = [523.25, 659.25, 783.99]; // C, E, G
+                
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime + (index * 0.1));
+                    oscillator.stop(audioContext.currentTime + 0.5 + (index * 0.1));
+                });
+            } catch (error) {
+                console.log('Audio not supported, using fallback');
+            }
+        }
+
+        function captureWithCountdown() {
+            const duration = parseInt(document.getElementById('countdownDuration').value);
+            if (duration > 0) {
+                startCountdown();
+            } else {
+                takePhoto();
+            }
+        }
+
+        // SHARE PHOTO FUNCTION
+        function sharePhoto(platform) {
+            if (!capturedPhoto) return;
+            const fileName = 'foto_photobooth_' + new Date().getTime() + '.png';
+            // Convert dataURL to blob
+            function dataURLtoBlob(dataurl) {
+                var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+                while(n--){
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], {type:mime});
+            }
+            const blob = dataURLtoBlob(capturedPhoto);
+            const file = new File([blob], fileName, {type: 'image/png'});
+            // Web Share API
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    files: [file],
+                    title: 'Photo Booth',
+                    text: 'Lihat hasil fotoku!'
+                }).then(() => {
+                    console.log('Shared successfully');
+                }).catch((err) => {
+                    alert('Gagal membagikan: ' + err);
+                });
+                return;
+            }
+            // Fallback: open share URL
+            let shareUrl = '';
+            if (platform === 'instagram') {
+                alert('Instagram tidak mendukung upload langsung dari browser. Silakan download foto lalu upload manual ke Instagram.');
+                return;
+            } else if (platform === 'facebook') {
+                shareUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href);
+            } else if (platform === 'whatsapp') {
+                shareUrl = 'https://wa.me/?text=' + encodeURIComponent('Lihat hasil fotoku! ' + window.location.href);
+            }
+            window.open(shareUrl, '_blank');
+        }
+    </script>
+</body>
+
+</html>
