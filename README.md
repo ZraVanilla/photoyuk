@@ -53,22 +53,16 @@ Project ini dapat dideploy menggunakan:
 
 Netlify
 
-Vercel
-
-Firebase Hosting
-
 📸 Screenshot
 
-Kalau mau, aku juga bisa tambahkan:
+![image](https://github.com/user-attachments/assets/402f8e00-0c90-4086-a2a9-150ad15f0037)
+![image](https://github.com/user-attachments/assets/2ff535c5-1977-4bc0-b8ca-48a718d3b16d)
 
-Link demo (kalau sudah dideploy).
 
-Section kontribusi jika project dibuka untuk kolaborasi.
+Link demo [(kalau sudah dideploy).](https://preeminent-donut-330bb3.netlify.app/)
 
-## Masalah yang Diperbaiki
 
-### Masalah Restart Kamera Stuck
-
+## Masalah
 **Masalah**: Tombol restart kamera sering stuck di "Inisialisasi Kamera..."
            : Masalah Resposive pada tampilan ukuran kamera dan bentuk frame di beberapa device, tetapi tidak merubah hasil
 
