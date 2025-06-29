@@ -127,6 +127,7 @@ Section kontribusi jika project dibuka untuk kolaborasi.
 - WebRTC (getUserMedia)
 - GLFX.js untuk efek advanced
 - CSS3 untuk animasi dan efek
+- js untuk animasi button dan lainnya
 
 ## Browser Support
 
@@ -152,14 +153,7 @@ Pastikan browser mendukung WebRTC dan getUserMedia API.
 - 🔧 Kontrol yang dapat disembunyikan untuk pengalaman yang lebih baik
 
 ## Frame Options 🖼️
-
-### Custom Image Frames:
-- **Frame 1**: Frame custom buatan Anda
-- **Frame 2**: Frame custom buatan Anda
-- **Frame 3**: Frame custom buatan Anda
-- **Frame 4**: Frame custom buatan Anda
-- **Frame 5**: Frame custom buatan Anda
-- **Frame 6**: Frame custom buatan Anda
+ada pilihan 6 frame yang tersedia
 
 ### Opsi Lain:
 - **Tanpa Frame**: Ambil foto tanpa frame apapun
