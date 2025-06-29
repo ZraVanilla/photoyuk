@@ -1,6 +1,6 @@
-📸 My Photobooth Web App
+📸 Photo Yuk
 Deskripsi
-My Photobooth adalah sebuah aplikasi web sederhana yang memungkinkan pengguna untuk:
+Photo yuk adalah sebuah aplikasi web sederhana yang memungkinkan pengguna untuk:
 
 Mengakses kamera secara langsung.
 
@@ -70,6 +70,7 @@ Section kontribusi jika project dibuka untuk kolaborasi.
 ### Masalah Restart Kamera Stuck
 
 **Masalah**: Tombol restart kamera sering stuck di "Inisialisasi Kamera..."
+           : Masalah Resposive pada tampilan ukuran kamera dan bentuk frame di beberapa device, tetapi tidak merubah hasil
 
 **Penyebab**:
 1. Elemen video tidak dibersihkan dengan benar saat restart
