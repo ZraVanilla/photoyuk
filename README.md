@@ -57,6 +57,7 @@ Netlify
 
 ![image](https://github.com/user-attachments/assets/402f8e00-0c90-4086-a2a9-150ad15f0037)
 ![image](https://github.com/user-attachments/assets/2ff535c5-1977-4bc0-b8ca-48a718d3b16d)
+![image](https://github.com/user-attachments/assets/3f5c094f-9996-4913-a8cc-a04bc6c8cd02)
 
 
 Link demo [(kalau sudah dideploy).](https://preeminent-donut-330bb3.netlify.app/)
